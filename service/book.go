@@ -1,0 +1,15 @@
+package service
+
+type BookResponse struct {
+	ID   int    `db:"id"`
+	Name string `db:"name"`
+	Desc string `db:"description"`
+}
+
+type BookService interface {
+	GetAllBook() ([]BookResponse, error)
+	GetByID(int) (*BookResponse, error)
+	UpdateBook(int) (*BookResponse, error)
+	AddBook() (*BookResponse, error)
+	DeleteBook(int) (string, error)
+}
