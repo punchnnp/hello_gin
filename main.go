@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"gin/handler"
 	"gin/repository"
@@ -9,7 +10,10 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
+
+var CTX = context.Background()
 
 func hello(c *gin.Context) {
 	c.String(200, "hello world")
@@ -58,5 +62,22 @@ func main() {
 	r.Use(DummyMiddleWare())
 	setupRoute(r)
 	fmt.Println("testing")
-	r.Run()
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+
+	err := rdb.Set(CTX, "name", "Punch", 0).Err()
+	if err != nil {
+		fmt.Println(err)
+	}
+	val, err2 := rdb.Get(CTX, "name").Result()
+	if err2 != nil {
+		fmt.Println(err2)
+	}
+	fmt.Printf("Redis start %v", val)
+
+	r.Run(":3000")
 }
