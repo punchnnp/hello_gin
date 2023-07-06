@@ -4,80 +4,113 @@ import (
 	"context"
 	"fmt"
 	"gin/handler"
-	"gin/repository"
+	repository "gin/repository/mysql"
+	rdb "gin/repository/redis"
 	"gin/service"
-	"log"
-	"strconv"
+	"time"
+
+	// "log"
+	"database/sql"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/redis/go-redis/v9"
+	"github.com/spf13/viper"
 )
 
 var CTX = context.Background()
 
-func hello(c *gin.Context) {
-	c.String(200, "hello world")
+type BookRedisTest struct {
+	Key        string
+	Value      string
+	Expiration time.Duration
 }
 
-func multiply(c *gin.Context) {
-	input, err := strconv.ParseInt(c.Param("num"), 10, 32)
-	if err != nil {
-		log.Fatalf(err.Error())
+func main() {
+	initConfig()
+	r := setupRoute()
+
+	// db := initDB()
+	// bookRepo := repository.NewRepositoryDB(db)
+
+	rd := initRedis()
+	bookRepoRedis := rdb.NewBookRepositoryRedis(rd)
+
+	test := rdb.BookRedis{
+		Key:        "Punch",
+		Value:      "Nunnapat",
+		Expiration: 0,
 	}
-	result := input * 3
-	c.String(200, "%d multiply by 3 equals to %d", input, result)
+	err := bookRepoRedis.Set(test)
+	if err != nil {
+		panic(err)
+	}
+	val, err2 := bookRepoRedis.Get("Punch")
+	if err2 != nil {
+		fmt.Println(err2)
+	}
+	fmt.Println(val)
+	r.Run(viper.GetString("app.port"))
 }
 
-func setupRoute(r *gin.Engine) {
-	// r := gin.Default()
+func setupRoute() *gin.Engine {
+	r := gin.Default()
 
+	db := initDB()
+	rd := initRedis()
+	_ = db
+	_ = rd
+	bookRepoRedis := rdb.NewBookRepositoryRedis(rd)
 	bookRepo := repository.NewBookRepositoryMock()
-	bookService := service.NewBookService(bookRepo)
+	bookService := service.NewBookService(bookRepo, bookRepoRedis)
 	bookHandler := handler.NewBookHandler(bookService)
 
-	r.GET("/", func(c *gin.Context) {
-		c.String(200, "Welcome to my GIN practice")
-	})
-	r.GET("/math/:num", multiply)
-	r.GET("/hello", hello)
 	r.GET("/books", bookHandler.GetAllBook)
 	r.GET("/books/:id", bookHandler.GetByID)
 	r.PUT("/books/:id", bookHandler.UpdateBook)
 	r.POST("/books", bookHandler.AddBook)
 	r.DELETE("/books/:id", bookHandler.DeleteBook)
 
-	// return r
+	return r
 }
 
-func DummyMiddleWare() gin.HandlerFunc {
-	fmt.Println("I'm Dummy")
+func initConfig() {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(".")
 
-	return func(c *gin.Context) {
-		c.Next()
-	}
-}
-
-func main() {
-	r := gin.Default()
-	r.Use(DummyMiddleWare())
-	setupRoute(r)
-	fmt.Println("testing")
-
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	})
-
-	err := rdb.Set(CTX, "name", "Punch", 0).Err()
+	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
-	val, err2 := rdb.Get(CTX, "name").Result()
-	if err2 != nil {
-		fmt.Println(err2)
-	}
-	fmt.Printf("Redis start %v", val)
+}
 
-	r.Run(":3000")
+func initDB() *sql.DB {
+	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v",
+		viper.GetString("db.username"),
+		viper.GetString("db.password"),
+		viper.GetString("db.hostname"),
+		viper.GetInt("db.port"),
+		viper.GetString("db.dbname"),
+	)
+
+	db, err := sql.Open(viper.GetString("db.driver"), dsn)
+	if err != nil {
+		panic(err)
+	}
+
+	db.SetMaxOpenConns(20)
+	db.SetMaxIdleConns(20)
+	db.SetConnMaxLifetime(time.Minute * 5)
+
+	return db
+}
+
+func initRedis() *redis.Client {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     viper.GetString("redis.address"),
+		Password: viper.GetString("redis.password"),
+		DB:       viper.GetInt("redis.db"),
+	})
+	return rdb
 }

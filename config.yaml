@@ -1,0 +1,15 @@
+app:
+  port: ":3000"
+
+db:
+  driver: "mysql"
+  username: "root"
+  password: "1991932"
+  hostname: "127.0.0.1"
+  port: 3306
+  dbname: "book"
+
+redis:
+  address: "localhost:6379"
+  password: ""
+  db: 0

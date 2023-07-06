@@ -2,15 +2,21 @@ package service
 
 import (
 	"errors"
-	"gin/repository"
+	repository "gin/repository/mysql"
+	rdb "gin/repository/redis"
 )
 
 type bookService struct {
-	bookRepo repository.BookRepository
+	bookRepo  repository.BookRepository
+	bookRedis rdb.BookRepositoryRedis
 }
 
-func NewBookService(bookRepo repository.BookRepository) bookService {
-	return bookService{bookRepo: bookRepo}
+func NewBookService(bookRepo repository.BookRepository,
+	bookRedis rdb.BookRepositoryRedis) bookService {
+	return bookService{
+		bookRepo:  bookRepo,
+		bookRedis: bookRedis,
+	}
 }
 
 func (s bookService) GetAllBook() ([]BookResponse, error) {
