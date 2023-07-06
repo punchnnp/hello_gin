@@ -3,13 +3,13 @@ package redis
 import "time"
 
 type BookRedis struct {
-	Key        string
-	Value      string
+	Key        int
+	Value      interface{}
 	Expiration time.Duration
 }
 
 type BookRepositoryRedis interface {
 	Set(BookRedis) error
-	Get(string) (string, error)
-	Delete(string) error
+	Get(int) (string, error)
+	Delete(int) error
 }

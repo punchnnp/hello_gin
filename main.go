@@ -37,7 +37,7 @@ func main() {
 	bookRepoRedis := rdb.NewBookRepositoryRedis(rd)
 
 	test := rdb.BookRedis{
-		Key:        "Punch",
+		Key:        1,
 		Value:      "Nunnapat",
 		Expiration: 0,
 	}
@@ -45,7 +45,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	val, err2 := bookRepoRedis.Get("Punch")
+	val, err2 := bookRepoRedis.Get(1)
 	if err2 != nil {
 		fmt.Println(err2)
 	}

@@ -38,17 +38,30 @@ func (s bookService) GetAllBook() ([]BookResponse, error) {
 }
 
 func (s bookService) GetByID(id int) (*BookResponse, error) {
-	book, err := s.bookRepo.GetByID(id)
+	val, err := s.bookRedis.Get(id)
 	if err != nil {
-		return nil, errors.New("book not found")
+		book, err2 := s.bookRepo.GetByID(id)
+		if err2 != nil {
+			return nil, errors.New("book not found")
+		}
+		result := BookResponse{
+			ID:   book.ID,
+			Name: book.Name,
+			Desc: book.Desc,
+		}
+		data := rdb.BookRedis{
+			Key:        book.ID,
+			Value:      result,
+			Expiration: 0,
+		}
+		err3 := s.bookRedis.Set(data)
+		if err3 != nil {
+			return nil, err3
+		}
+		return &result, nil
 	}
-
-	result := BookResponse{
-		ID:   book.ID,
-		Name: book.Name,
-		Desc: book.Desc,
-	}
-	return &result, nil
+	_ = val
+	return &BookResponse{}, nil
 }
 
 func (s bookService) UpdateBook(id int) (*BookResponse, error) {
