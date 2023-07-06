@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"gin/handler"
 	"gin/repository"
 	"gin/service"
@@ -23,8 +24,8 @@ func multiply(c *gin.Context) {
 	c.String(200, "%d multiply by 3 equals to %d", input, result)
 }
 
-func setupRoute() *gin.Engine {
-	r := gin.Default()
+func setupRoute(r *gin.Engine) {
+	// r := gin.Default()
 
 	bookRepo := repository.NewBookRepositoryMock()
 	bookService := service.NewBookService(bookRepo)
@@ -41,10 +42,21 @@ func setupRoute() *gin.Engine {
 	r.POST("/books", bookHandler.AddBook)
 	r.DELETE("/books/:id", bookHandler.DeleteBook)
 
-	return r
+	// return r
+}
+
+func DummyMiddleWare() gin.HandlerFunc {
+	fmt.Println("I'm Dummy")
+
+	return func(c *gin.Context) {
+		c.Next()
+	}
 }
 
 func main() {
-	r := setupRoute()
+	r := gin.Default()
+	r.Use(DummyMiddleWare())
+	setupRoute(r)
+	fmt.Println("testing")
 	r.Run()
 }
