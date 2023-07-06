@@ -17,8 +17,8 @@ func NewBookRepositoryRedis(rdb *redis.Client) *bookRepositoryRedis {
 	return &bookRepositoryRedis{rdb: rdb}
 }
 
-func (r *bookRepositoryRedis) Set(data BookRedis) error {
-	err := r.rdb.Set(Ctx, fmt.Sprintf("%v", data.Key), data.Value, data.Expiration).Err()
+func (r *bookRepositoryRedis) Set(key int, data BookRedis) error {
+	err := r.rdb.Set(Ctx, fmt.Sprintf("%v", key), data.Value, data.Expiration).Err()
 	if err != nil {
 		return err
 	}
@@ -30,6 +30,8 @@ func (r *bookRepositoryRedis) Get(key int) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// err2 := json.Unmarshal([]byte(val), )
 	return val, nil
 }
 

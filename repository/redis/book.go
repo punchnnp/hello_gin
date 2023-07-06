@@ -9,7 +9,7 @@ type BookRedis struct {
 }
 
 type BookRepositoryRedis interface {
-	Set(BookRedis) error
+	Set(int, BookRedis) error
 	Get(int) (string, error)
 	Delete(int) error
 }

@@ -30,24 +30,17 @@ func main() {
 	initConfig()
 	r := setupRoute()
 
-	// db := initDB()
-	// bookRepo := repository.NewRepositoryDB(db)
+	db := initDB()
+	bookRepo := repository.NewRepositoryDB(db)
 
 	rd := initRedis()
 	bookRepoRedis := rdb.NewBookRepositoryRedis(rd)
 
-	test := rdb.BookRedis{
-		Key:        1,
-		Value:      "Nunnapat",
-		Expiration: 0,
-	}
-	err := bookRepoRedis.Set(test)
+	bookService := service.NewBookService(bookRepo, bookRepoRedis)
+
+	val, err := bookService.GetByID(2)
 	if err != nil {
-		panic(err)
-	}
-	val, err2 := bookRepoRedis.Get(1)
-	if err2 != nil {
-		fmt.Println(err2)
+		fmt.Println(err)
 	}
 	fmt.Println(val)
 	r.Run(viper.GetString("app.port"))

@@ -54,9 +54,10 @@ func (s bookService) GetByID(id int) (*BookResponse, error) {
 			Value:      result,
 			Expiration: 0,
 		}
-		err3 := s.bookRedis.Set(data)
-		if err3 != nil {
-			return nil, err3
+		// json, err3 := json.Marshal(data)
+		err4 := s.bookRedis.Set(book.ID, data)
+		if err4 != nil {
+			return nil, err4
 		}
 		return &result, nil
 	}
