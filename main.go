@@ -30,19 +30,19 @@ func main() {
 	initConfig()
 	r := setupRoute()
 
-	db := initDB()
-	bookRepo := repository.NewRepositoryDB(db)
+	// db := initDB()
+	// bookRepo := repository.NewRepositoryDB(db)
 
-	rd := initRedis()
-	bookRepoRedis := rdb.NewBookRepositoryRedis(rd)
+	// rd := initRedis()
+	// bookRepoRedis := rdb.NewBookRepositoryRedis(rd)
 
-	bookService := service.NewBookService(bookRepo, bookRepoRedis)
+	// bookService := service.NewBookService(bookRepo, bookRepoRedis)
 
-	val, err := bookService.GetByID(2)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(val)
+	// val, err := bookService.GetByID(2)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(val)
 	r.Run(viper.GetString("app.port"))
 }
 
@@ -51,10 +51,10 @@ func setupRoute() *gin.Engine {
 
 	db := initDB()
 	rd := initRedis()
-	_ = db
-	_ = rd
+	// _ = db
+	// _ = rd
 	bookRepoRedis := rdb.NewBookRepositoryRedis(rd)
-	bookRepo := repository.NewBookRepositoryMock()
+	bookRepo := repository.NewRepositoryDB(db)
 	bookService := service.NewBookService(bookRepo, bookRepoRedis)
 	bookHandler := handler.NewBookHandler(bookService)
 

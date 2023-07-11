@@ -33,6 +33,7 @@ func (h bookHandler) GetByID(c *gin.Context) {
 	}
 	book, err2 := h.bookService.GetByID(int(id))
 	if err2 != nil {
+		// http status depend on specification
 		c.String(http.StatusOK, err2.Error())
 		return
 	}
@@ -75,5 +76,5 @@ func (h bookHandler) DeleteBook(c *gin.Context) {
 		c.String(http.StatusOK, err2.Error())
 		return
 	}
-	c.String(http.StatusOK, result)
+	c.JSON(http.StatusOK, result)
 }

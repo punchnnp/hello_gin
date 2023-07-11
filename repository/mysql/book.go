@@ -1,5 +1,7 @@
 package mysql
 
+import "gin/model"
+
 type Book struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
@@ -11,5 +13,5 @@ type BookRepository interface {
 	GetByID(int) (*Book, error)
 	UpdateBook(int) (*Book, error)
 	AddBook() (*Book, error)
-	DeleteBook(int) (string, error)
+	DeleteBook(int) (model.MessageResponse, error)
 }

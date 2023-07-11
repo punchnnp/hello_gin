@@ -1,9 +1,15 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	repository "gin/repository/mysql"
 	rdb "gin/repository/redis"
+	"log"
+
+	"gin/model"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type bookService struct {
@@ -38,8 +44,12 @@ func (s bookService) GetAllBook() ([]BookResponse, error) {
 }
 
 func (s bookService) GetByID(id int) (*BookResponse, error) {
-	val, err := s.bookRedis.Get(id)
+	var val BookResponse
+	err := s.bookRedis.Get(id, &val)
 	if err != nil {
+		if err != redis.Nil {
+			return nil, err
+		}
 		book, err2 := s.bookRepo.GetByID(id)
 		if err2 != nil {
 			return nil, errors.New("book not found")
@@ -49,25 +59,36 @@ func (s bookService) GetByID(id int) (*BookResponse, error) {
 			Name: book.Name,
 			Desc: book.Desc,
 		}
+
+		json, err3 := json.Marshal(result)
+		if err3 != nil {
+			return nil, err3
+		}
+
 		data := rdb.BookRedis{
 			Key:        book.ID,
-			Value:      result,
+			Value:      json,
 			Expiration: 0,
 		}
-		// json, err3 := json.Marshal(data)
-		err4 := s.bookRedis.Set(book.ID, data)
+
+		err4 := s.bookRedis.Set(data)
 		if err4 != nil {
+			log.Println("here")
 			return nil, err4
 		}
 		return &result, nil
 	}
-	_ = val
-	return &BookResponse{}, nil
+	return &val, nil
 }
 
 func (s bookService) UpdateBook(id int) (*BookResponse, error) {
-	book, err := s.bookRepo.UpdateBook(id)
+	err := s.bookRedis.Delete(id)
 	if err != nil {
+		return nil, err
+	}
+
+	book, err2 := s.bookRepo.UpdateBook(id)
+	if err2 != nil {
 		return nil, errors.New("book not found")
 	}
 
@@ -76,7 +97,9 @@ func (s bookService) UpdateBook(id int) (*BookResponse, error) {
 		Name: book.Name,
 		Desc: book.Desc,
 	}
+
 	return &result, nil
+
 }
 
 func (s bookService) AddBook() (*BookResponse, error) {
@@ -93,10 +116,15 @@ func (s bookService) AddBook() (*BookResponse, error) {
 	return &result, nil
 }
 
-func (s bookService) DeleteBook(id int) (string, error) {
-	_, err := s.bookRepo.DeleteBook(id)
+func (s bookService) DeleteBook(id int) (model.MessageResponse, error) {
+	err := s.bookRedis.Delete(id)
 	if err != nil {
-		return "", errors.New("book not found")
+		return model.MessageResponse{}, err
 	}
-	return "book deleted", nil
+
+	message, err := s.bookRepo.DeleteBook(id)
+	if err != nil {
+		return model.MessageResponse{}, errors.New("book not found")
+	}
+	return message, nil
 }

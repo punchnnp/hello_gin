@@ -3,6 +3,8 @@ package mysql
 import (
 	"database/sql"
 
+	"gin/model"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -70,11 +72,27 @@ func (r bookRepositoryDB) AddBook() (*Book, error) {
 	return r.GetByID(int(id))
 }
 
-func (r bookRepositoryDB) DeleteBook(id int) (string, error) {
+func (r bookRepositoryDB) DeleteBook(id int) (model.MessageResponse, error) {
 	query := "DELETE FROM books WHERE book_id = ?"
-	_, err := r.db.Exec(query, id)
+	res, err := r.db.Exec(query, id)
 	if err != nil {
-		return "", err
+		return model.MessageResponse{}, err
 	}
-	return "This book ID is deleted", nil
+
+	count, err2 := res.RowsAffected()
+	if err2 != nil {
+		return model.MessageResponse{}, err2
+	}
+
+	errorMessage := model.MessageResponse{
+		Message: "book not found",
+	}
+	if count == 0 {
+		return errorMessage, nil
+	}
+
+	response := model.MessageResponse{
+		Message: "This book ID is deleted",
+	}
+	return response, nil
 }

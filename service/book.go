@@ -1,5 +1,7 @@
 package service
 
+import "gin/model"
+
 type BookResponse struct {
 	ID   int    `db:"id"`
 	Name string `db:"name"`
@@ -11,5 +13,5 @@ type BookService interface {
 	GetByID(int) (*BookResponse, error)
 	UpdateBook(int) (*BookResponse, error)
 	AddBook() (*BookResponse, error)
-	DeleteBook(int) (string, error)
+	DeleteBook(int) (model.MessageResponse, error)
 }

@@ -2,7 +2,9 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -17,22 +19,26 @@ func NewBookRepositoryRedis(rdb *redis.Client) *bookRepositoryRedis {
 	return &bookRepositoryRedis{rdb: rdb}
 }
 
-func (r *bookRepositoryRedis) Set(key int, data BookRedis) error {
-	err := r.rdb.Set(Ctx, fmt.Sprintf("%v", key), data.Value, data.Expiration).Err()
+func (r *bookRepositoryRedis) Set(data BookRedis) error {
+	err := r.rdb.Set(Ctx, fmt.Sprintf("%v", data.Key), data.Value, data.Expiration).Err()
 	if err != nil {
+		log.Println("milk")
 		return err
 	}
 	return nil
 }
 
-func (r *bookRepositoryRedis) Get(key int) (string, error) {
+func (r *bookRepositoryRedis) Get(key int, data interface{}) error {
 	val, err := r.rdb.Get(Ctx, fmt.Sprintf("%v", key)).Result()
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	// err2 := json.Unmarshal([]byte(val), )
-	return val, nil
+	err2 := json.Unmarshal([]byte(val), data)
+	if err2 != nil {
+		return err2
+	}
+	return nil
 }
 
 func (r *bookRepositoryRedis) Delete(key int) error {
