@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"gin/handler"
-	repository "gin/repository/mysql"
+	gdb "gin/repository/gorm"
+
+	// repository "gin/repository/mysql"
 	rdb "gin/repository/redis"
 	"gin/service"
 	"time"
@@ -16,6 +18,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 var CTX = context.Background()
@@ -29,32 +33,26 @@ type BookRedisTest struct {
 func main() {
 	initConfig()
 	r := setupRoute()
-
-	// db := initDB()
-	// bookRepo := repository.NewRepositoryDB(db)
-
-	// rd := initRedis()
-	// bookRepoRedis := rdb.NewBookRepositoryRedis(rd)
-
-	// bookService := service.NewBookService(bookRepo, bookRepoRedis)
-
-	// val, err := bookService.GetByID(2)
+	r.Run(viper.GetString("app.port"))
+	// db := initGorm()
+	// bookRepoGORM := gdb.NewRepositoryGORM(db)
+	// result, err := bookRepoGORM.UpdateBook(4)
 	// if err != nil {
 	// 	fmt.Println(err)
 	// }
-	// fmt.Println(val)
-	r.Run(viper.GetString("app.port"))
+	// fmt.Println(result)
 }
 
 func setupRoute() *gin.Engine {
 	r := gin.Default()
 
-	db := initDB()
+	db := initGorm()
 	rd := initRedis()
 	// _ = db
 	// _ = rd
 	bookRepoRedis := rdb.NewBookRepositoryRedis(rd)
-	bookRepo := repository.NewRepositoryDB(db)
+	// bookRepo := repository.NewRepositoryDB(db)
+	bookRepo := gdb.NewRepositoryGORM(db)
 	bookService := service.NewBookService(bookRepo, bookRepoRedis)
 	bookHandler := handler.NewBookHandler(bookService)
 
@@ -96,6 +94,23 @@ func initDB() *sql.DB {
 	db.SetMaxIdleConns(20)
 	db.SetConnMaxLifetime(time.Minute * 5)
 
+	return db
+}
+
+func initGorm() *gorm.DB {
+	// dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v",
+	// 	viper.GetString("db.username"),
+	// 	viper.GetString("db.password"),
+	// 	viper.GetString("db.hostname"),
+	// 	viper.GetInt("db.port"),
+	// 	viper.GetString("db.dbname"),
+	// )
+
+	db, err := gorm.Open(mysql.Open("root:1991932@tcp(127.0.0.1:3306)/book"))
+	if err != nil {
+		panic(err)
+	}
+	db.AutoMigrate(&gdb.Books{})
 	return db
 }
 

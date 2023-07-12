@@ -3,7 +3,9 @@ package service
 import (
 	"encoding/json"
 	"errors"
-	repository "gin/repository/mysql"
+	gdb "gin/repository/gorm"
+
+	// repository "gin/repository/mysql"
 	rdb "gin/repository/redis"
 	"log"
 
@@ -13,11 +15,12 @@ import (
 )
 
 type bookService struct {
-	bookRepo  repository.BookRepository
+	bookRepo gdb.BookRepositoryGORM
+	// bookRepo repository.BookRepository
 	bookRedis rdb.BookRepositoryRedis
 }
 
-func NewBookService(bookRepo repository.BookRepository,
+func NewBookService(bookRepo gdb.BookRepositoryGORM,
 	bookRedis rdb.BookRepositoryRedis) bookService {
 	return bookService{
 		bookRepo:  bookRepo,
@@ -81,39 +84,39 @@ func (s bookService) GetByID(id int) (*BookResponse, error) {
 	return &val, nil
 }
 
-func (s bookService) UpdateBook(id int) (*BookResponse, error) {
+func (s bookService) UpdateBook(id int) (model.MessageResponse, error) {
 	err := s.bookRedis.Delete(id)
 	if err != nil {
-		return nil, err
+		return model.MessageResponse{}, err
 	}
 
 	book, err2 := s.bookRepo.UpdateBook(id)
 	if err2 != nil {
-		return nil, errors.New("book not found")
+		return model.MessageResponse{}, errors.New("book not found")
 	}
 
-	result := BookResponse{
-		ID:   book.ID,
-		Name: book.Name,
-		Desc: book.Desc,
-	}
+	// result := BookResponse{
+	// 	ID:   book.ID,
+	// 	Name: book.Name,
+	// 	Desc: book.Desc,
+	// }
 
-	return &result, nil
+	return book, nil
 
 }
 
-func (s bookService) AddBook() (*BookResponse, error) {
+func (s bookService) AddBook() (model.MessageResponse, error) {
 	book, err := s.bookRepo.AddBook()
 	if err != nil {
-		return nil, errors.New("book not found")
+		return model.MessageResponse{}, errors.New("book not found")
 	}
 
-	result := BookResponse{
-		ID:   book.ID,
-		Name: book.Name,
-		Desc: book.Desc,
-	}
-	return &result, nil
+	// result := BookResponse{
+	// 	ID:   book.ID,
+	// 	Name: book.Name,
+	// 	Desc: book.Desc,
+	// }
+	return book, nil
 }
 
 func (s bookService) DeleteBook(id int) (model.MessageResponse, error) {

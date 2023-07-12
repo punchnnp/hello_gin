@@ -11,7 +11,7 @@ type BookResponse struct {
 type BookService interface {
 	GetAllBook() ([]BookResponse, error)
 	GetByID(int) (*BookResponse, error)
-	UpdateBook(int) (*BookResponse, error)
-	AddBook() (*BookResponse, error)
+	UpdateBook(int) (model.MessageResponse, error)
+	AddBook() (model.MessageResponse, error)
 	DeleteBook(int) (model.MessageResponse, error)
 }
