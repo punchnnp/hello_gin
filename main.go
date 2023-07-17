@@ -13,6 +13,7 @@ import (
 
 	// "log"
 	"database/sql"
+	"encoding/json"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -32,15 +33,30 @@ type BookRedisTest struct {
 
 func main() {
 	initConfig()
-	r := setupRoute()
-	r.Run(viper.GetString("app.port"))
-	// db := initGorm()
-	// bookRepoGORM := gdb.NewRepositoryGORM(db)
-	// result, err := bookRepoGORM.UpdateBook(4)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(result)
+	// r := setupRoute()
+	// r.Run(viper.GetString("app.port"))
+	db := initGorm()
+	bookRepoGORM := gdb.NewRepositoryGORM(db)
+	result, err := bookRepoGORM.GetBookAuthor(1)
+	if err != nil {
+		fmt.Println(err)
+	}
+	js, err := json.Marshal(result)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Printf("%s\n", js)
+	result2, err := bookRepoGORM.GetAuthorBook(1)
+	if err != nil {
+		fmt.Println(result2)
+	}
+
+	js, err = json.Marshal(result2)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Printf("json %s\n", js)
+
 }
 
 func setupRoute() *gin.Engine {
@@ -58,6 +74,8 @@ func setupRoute() *gin.Engine {
 
 	r.GET("/books", bookHandler.GetAllBook)
 	r.GET("/books/:id", bookHandler.GetByID)
+	r.GET("/books/:id/name", bookHandler.GetBookAuthor)
+	r.GET("/books/name/:id", bookHandler.GetAuthorBook)
 	r.PUT("/books/:id", bookHandler.UpdateBook)
 	r.POST("/books", bookHandler.AddBook)
 	r.DELETE("/books/:id", bookHandler.DeleteBook)
@@ -98,19 +116,19 @@ func initDB() *sql.DB {
 }
 
 func initGorm() *gorm.DB {
-	// dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v",
-	// 	viper.GetString("db.username"),
-	// 	viper.GetString("db.password"),
-	// 	viper.GetString("db.hostname"),
-	// 	viper.GetInt("db.port"),
-	// 	viper.GetString("db.dbname"),
-	// )
+	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v",
+		viper.GetString("db.username"),
+		viper.GetString("db.password"),
+		viper.GetString("db.hostname"),
+		viper.GetInt("db.port"),
+		viper.GetString("db.dbname"),
+	)
 
-	db, err := gorm.Open(mysql.Open("root:1991932@tcp(127.0.0.1:3306)/book"))
+	db, err := gorm.Open(mysql.Open(dsn))
 	if err != nil {
 		panic(err)
 	}
-	db.AutoMigrate(&gdb.Books{})
+	// db.AutoMigrate(&gdb.Books{})
 	return db
 }
 

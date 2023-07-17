@@ -41,6 +41,33 @@ func (h bookHandler) GetByID(c *gin.Context) {
 
 }
 
+func (h bookHandler) GetBookAuthor(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 32)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	aut, err2 := h.bookService.GetBookAuthor(int(id))
+	if err2 != nil {
+		c.String(http.StatusOK, err2.Error())
+		return
+	}
+	c.JSON(http.StatusOK, aut)
+}
+
+func (h bookHandler) GetAuthorBook(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 32)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	books, err2 := h.bookService.GetAuthorBook(int(id))
+	if err != nil {
+		c.String(http.StatusOK, err2.Error())
+	}
+	c.JSON(http.StatusOK, books)
+}
+
 func (h bookHandler) UpdateBook(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 32)
 	if err != nil {

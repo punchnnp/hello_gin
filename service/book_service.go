@@ -7,7 +7,6 @@ import (
 
 	// repository "gin/repository/mysql"
 	rdb "gin/repository/redis"
-	"log"
 
 	"gin/model"
 
@@ -76,12 +75,42 @@ func (s bookService) GetByID(id int) (*BookResponse, error) {
 
 		err4 := s.bookRedis.Set(data)
 		if err4 != nil {
-			log.Println("here")
 			return nil, err4
 		}
 		return &result, nil
 	}
 	return &val, nil
+}
+
+func (s bookService) GetBookAuthor(id int) (*AuthorResponse, error) {
+	aut, err := s.bookRepo.GetBookAuthor(id)
+	if err != nil {
+		return nil, errors.New("failed to get book's author")
+	}
+
+	author := AuthorResponse{
+		ID:   aut.ID,
+		Name: aut.Name,
+	}
+	return &author, nil
+}
+
+func (s bookService) GetAuthorBook(id int) ([]BookResponse, error) {
+	var result []BookResponse
+	books, err := s.bookRepo.GetAuthorBook(id)
+	if err != nil {
+		return nil, errors.New("author not found")
+	}
+
+	for _, book := range books {
+		a := BookResponse{
+			ID:   book.ID,
+			Name: book.Name,
+			Desc: book.Desc,
+		}
+		result = append(result, a)
+	}
+	return result, nil
 }
 
 func (s bookService) UpdateBook(id int) (model.MessageResponse, error) {
@@ -108,7 +137,7 @@ func (s bookService) UpdateBook(id int) (model.MessageResponse, error) {
 func (s bookService) AddBook() (model.MessageResponse, error) {
 	book, err := s.bookRepo.AddBook()
 	if err != nil {
-		return model.MessageResponse{}, errors.New("book not found")
+		return model.MessageResponse{}, errors.New("failed to add new book")
 	}
 
 	// result := BookResponse{
