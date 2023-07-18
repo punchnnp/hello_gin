@@ -82,17 +82,19 @@ func (s bookService) GetByID(id int) (*BookResponse, error) {
 	return &val, nil
 }
 
-func (s bookService) GetBookAuthor(id int) (*AuthorResponse, error) {
-	aut, err := s.bookRepo.GetBookAuthor(id)
+func (s bookService) GetBookAuthor(id int) (*BookResponse, error) {
+	book, err := s.bookRepo.GetBookAuthor(id)
 	if err != nil {
 		return nil, errors.New("failed to get book's author")
 	}
 
-	author := AuthorResponse{
-		ID:   aut.ID,
-		Name: aut.Name,
+	result := BookResponse{
+		ID:     book.ID,
+		Name:   book.Name,
+		Desc:   book.Desc,
+		Author: book.Author.Name,
 	}
-	return &author, nil
+	return &result, nil
 }
 
 func (s bookService) GetAuthorBook(id int) ([]BookResponse, error) {

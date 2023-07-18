@@ -13,7 +13,6 @@ import (
 
 	// "log"
 	"database/sql"
-	"encoding/json"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -25,38 +24,10 @@ import (
 
 var CTX = context.Background()
 
-type BookRedisTest struct {
-	Key        string
-	Value      string
-	Expiration time.Duration
-}
-
 func main() {
 	initConfig()
-	// r := setupRoute()
-	// r.Run(viper.GetString("app.port"))
-	db := initGorm()
-	bookRepoGORM := gdb.NewRepositoryGORM(db)
-	result, err := bookRepoGORM.GetBookAuthor(1)
-	if err != nil {
-		fmt.Println(err)
-	}
-	js, err := json.Marshal(result)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Printf("%s\n", js)
-	result2, err := bookRepoGORM.GetAuthorBook(1)
-	if err != nil {
-		fmt.Println(result2)
-	}
-
-	js, err = json.Marshal(result2)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Printf("json %s\n", js)
-
+	r := setupRoute()
+	r.Run(viper.GetString("app.port"))
 }
 
 func setupRoute() *gin.Engine {

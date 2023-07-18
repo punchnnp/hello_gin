@@ -3,9 +3,10 @@ package service
 import "gin/model"
 
 type BookResponse struct {
-	ID   int    `db:"id"`
-	Name string `db:"name"`
-	Desc string `db:"description"`
+	ID     int    `db:"id"`
+	Name   string `db:"name"`
+	Desc   string `db:"description"`
+	Author string `json:",omitempty"`
 }
 
 type AuthorResponse struct {
@@ -16,7 +17,7 @@ type AuthorResponse struct {
 type BookService interface {
 	GetAllBook() ([]BookResponse, error)
 	GetByID(int) (*BookResponse, error)
-	GetBookAuthor(int) (*AuthorResponse, error)
+	GetBookAuthor(int) (*BookResponse, error)
 	GetAuthorBook(int) ([]BookResponse, error)
 	UpdateBook(int) (model.MessageResponse, error)
 	AddBook() (model.MessageResponse, error)
