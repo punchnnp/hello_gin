@@ -33,6 +33,24 @@ func (r bookRepositoryGORM) GetByID(id int) (*Books, error) {
 	return &book, nil
 }
 
+func (r bookRepositoryGORM) GetAllAuthor() ([]Author, error) {
+	var authors []Author
+	result := r.db.Find(&authors)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return authors, nil
+}
+
+func (r bookRepositoryGORM) GetAutByID(id int) (*Author, error) {
+	var author Author
+	err := r.db.First(&author, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &author, nil
+}
+
 func (r bookRepositoryGORM) GetBookAuthor(id int) (*Books, error) {
 	var book Books
 	result := r.db.Preload("Author").Find(&book, id)
@@ -78,6 +96,7 @@ func (r bookRepositoryGORM) AddBook() (model.MessageResponse, error) {
 	new := Books{
 		Name: "new book",
 		Desc: "new description",
+		Aut:  1,
 	}
 	err := r.db.Create(&new).Error
 	if err != nil {

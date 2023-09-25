@@ -22,6 +22,8 @@ func (author *Author) TableName() string {
 type BookRepositoryGORM interface {
 	GetAllBook() ([]Books, error)
 	GetByID(int) (*Books, error)
+	GetAllAuthor() ([]Author, error)
+	GetAutByID(int) (*Author, error)
 	GetBookAuthor(int) (*Books, error)
 	GetAuthorBook(int) ([]Books, error)
 	UpdateBook(int) (model.MessageResponse, error)

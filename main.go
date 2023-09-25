@@ -6,7 +6,6 @@ import (
 	"gin/handler"
 	gdb "gin/repository/gorm"
 
-	// repository "gin/repository/mysql"
 	rdb "gin/repository/redis"
 	"gin/service"
 	"time"
@@ -28,13 +27,23 @@ func main() {
 	initConfig()
 	r := setupRoute()
 	r.Run(viper.GetString("app.port"))
+	// db := initGorm()
+	// bookRepo := gdb.NewRepositoryGORM(db)
+	// auts, err := bookRepo.GetAutByID(2)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(auts)
 }
 
 func setupRoute() *gin.Engine {
 	r := gin.Default()
 
+	r.POST("/login/:name", handler.LoginHandler)
 	db := initGorm()
+	dbb := initDB()
 	rd := initRedis()
+	_ = dbb
 	// _ = db
 	// _ = rd
 	bookRepoRedis := rdb.NewBookRepositoryRedis(rd)
@@ -43,13 +52,15 @@ func setupRoute() *gin.Engine {
 	bookService := service.NewBookService(bookRepo, bookRepoRedis)
 	bookHandler := handler.NewBookHandler(bookService)
 
-	r.GET("/books", bookHandler.GetAllBook)
-	r.GET("/books/:id", bookHandler.GetByID)
-	r.GET("/books/:id/name", bookHandler.GetBookAuthor)
-	r.GET("/books/name/:id", bookHandler.GetAuthorBook)
-	r.PUT("/books/:id", bookHandler.UpdateBook)
-	r.POST("/books", bookHandler.AddBook)
-	r.DELETE("/books/:id", bookHandler.DeleteBook)
+	groups := r.Group("/", handler.AuthoruzationMiddleware)
+
+	groups.GET("/books", bookHandler.GetAllBook)
+	groups.GET("/books/:id", bookHandler.GetByID)
+	groups.GET("/books/:id/name", bookHandler.GetBookAuthor)
+	groups.GET("/books/name/:id", bookHandler.GetAuthorBook)
+	groups.PUT("/books/:id", bookHandler.UpdateBook)
+	groups.POST("/books", bookHandler.AddBook)
+	groups.DELETE("/books/:id", bookHandler.DeleteBook)
 
 	return r
 }
