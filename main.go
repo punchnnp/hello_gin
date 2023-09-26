@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gin/handler"
+	"gin/middleware"
 	gdb "gin/repository/gorm"
 
 	rdb "gin/repository/redis"
@@ -52,7 +53,7 @@ func setupRoute() *gin.Engine {
 	bookService := service.NewBookService(bookRepo, bookRepoRedis)
 	bookHandler := handler.NewBookHandler(bookService)
 
-	groups := r.Group("/", handler.AuthoruzationMiddleware)
+	groups := r.Group("/", middleware.AuthoruzationMiddleware)
 
 	groups.GET("/books", bookHandler.GetAllBook)
 	groups.GET("/books/:id", bookHandler.GetByID)

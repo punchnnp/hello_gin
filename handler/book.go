@@ -1,22 +1,13 @@
 package handler
 
 import (
-	"fmt"
-	"gin/service"
 	"net/http"
 	"strconv"
-	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
-type bookHandler struct {
-	bookService service.BookService
-}
-
-func NewBookHandler(bookService service.BookService) bookHandler {
+func NewBookHandler(bookService BookService) bookHandler {
 	return bookHandler{bookService: bookService}
 }
 
@@ -108,68 +99,4 @@ func (h bookHandler) DeleteBook(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, result)
-}
-
-type UserClaim struct {
-	jwt.RegisteredClaims
-	Name      string
-	ExpiresAt int
-}
-
-func LoginHandler(c *gin.Context) {
-	signature := []byte("flowers")
-	id := c.Param("name")
-	// expire should be time format unix for any timezone
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaim{
-		Name: id,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(5 * time.Minute)},
-		},
-	})
-
-	ss, err := token.SignedString(signature)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"token": ss,
-	})
-}
-
-func validateToken(token string) error {
-	newToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
-		}
-		return []byte("flowers"), nil
-	})
-
-	// check if token valid
-	_, ok := newToken.Claims.(jwt.Claims)
-	if !ok || !newToken.Valid {
-		return err
-	}
-
-	// check if expire or not numeric time
-	time, err := newToken.Claims.GetExpirationTime()
-	_ = time
-
-	// check if expire
-	return err
-}
-
-func AuthoruzationMiddleware(c *gin.Context) {
-	s := c.Request.Header.Get("Authorization")
-
-	ss := strings.TrimPrefix("Bearer ", s)
-
-	err := validateToken(ss)
-	if err != nil {
-		c.String(http.StatusUnauthorized, err.Error())
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
 }

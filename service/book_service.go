@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"errors"
+	"gin/handler"
 	gdb "gin/repository/gorm"
 
 	// repository "gin/repository/mysql"
@@ -27,14 +28,14 @@ func NewBookService(bookRepo gdb.BookRepositoryGORM,
 	}
 }
 
-func (s bookService) GetAllBook() ([]BookResponse, error) {
+func (s bookService) GetAllBook() ([]handler.BookResponse, error) {
 	books, err := s.bookRepo.GetAllBook()
 	if err != nil {
 		return nil, err
 	}
-	result := []BookResponse{}
+	result := []handler.BookResponse{}
 	for _, book := range books {
-		a := BookResponse{
+		a := handler.BookResponse{
 			ID:   book.ID,
 			Name: book.Name,
 			Desc: book.Desc,
@@ -45,8 +46,8 @@ func (s bookService) GetAllBook() ([]BookResponse, error) {
 	return result, nil
 }
 
-func (s bookService) GetByID(id int) (*BookResponse, error) {
-	var val BookResponse
+func (s bookService) GetByID(id int) (*handler.BookResponse, error) {
+	var val handler.BookResponse
 	err := s.bookRedis.Get(id, &val)
 	if err != nil {
 		if err != redis.Nil {
@@ -56,7 +57,7 @@ func (s bookService) GetByID(id int) (*BookResponse, error) {
 		if err2 != nil {
 			return nil, errors.New("book not found")
 		}
-		result := BookResponse{
+		result := handler.BookResponse{
 			ID:   book.ID,
 			Name: book.Name,
 			Desc: book.Desc,
@@ -82,13 +83,13 @@ func (s bookService) GetByID(id int) (*BookResponse, error) {
 	return &val, nil
 }
 
-func (s bookService) GetBookAuthor(id int) (*BookResponse, error) {
+func (s bookService) GetBookAuthor(id int) (*handler.BookResponse, error) {
 	book, err := s.bookRepo.GetBookAuthor(id)
 	if err != nil {
 		return nil, errors.New("failed to get book's author")
 	}
 
-	result := BookResponse{
+	result := handler.BookResponse{
 		ID:     book.ID,
 		Name:   book.Name,
 		Desc:   book.Desc,
@@ -97,15 +98,15 @@ func (s bookService) GetBookAuthor(id int) (*BookResponse, error) {
 	return &result, nil
 }
 
-func (s bookService) GetAuthorBook(id int) ([]BookResponse, error) {
-	var result []BookResponse
+func (s bookService) GetAuthorBook(id int) ([]handler.BookResponse, error) {
+	var result []handler.BookResponse
 	books, err := s.bookRepo.GetAuthorBook(id)
 	if err != nil {
 		return nil, errors.New("author not found")
 	}
 
 	for _, book := range books {
-		a := BookResponse{
+		a := handler.BookResponse{
 			ID:   book.ID,
 			Name: book.Name,
 			Desc: book.Desc,
